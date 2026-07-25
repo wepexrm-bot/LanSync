@@ -39,6 +39,11 @@ if (cmd === '--help' || cmd === '-h') {
   process.exit(0);
 }
 
+if (cmd === '--version' || cmd === '-v') {
+  console.log(`v${pkg.version}`);
+  process.exit(0);
+}
+
 if (cmd === 'host') {
   const portIdx = args.indexOf('--port');
   const port = portIdx !== -1 ? parseInt(args[portIdx + 1], 10) : 3000;
