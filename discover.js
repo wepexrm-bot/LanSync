@@ -1,0 +1,79 @@
+const readline = require('readline');
+const bonjour = require('bonjour')();
+
+function openBrowser(url) {
+  const cmd = process.platform === 'win32' ? 'start' :
+              process.platform === 'darwin' ? 'open' : 'xdg-open';
+  require('child_process').exec(`${cmd} ${url}`);
+}
+
+function discover() {
+  const SCAN_SECONDS = 4;
+  const services = [];
+
+  console.log(`\n  Scanning for LAN Sync hosts on your network... (${SCAN_SECONDS}s)`);
+
+  const browser = bonjour.find({ type: 'lan-sync' }, (service) => {
+    const existing = services.find((s) => s.name === service.name && s.host === service.host);
+    if (!existing) {
+      services.push(service);
+      const addresses = service.addresses || [];
+      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || service.host;
+      console.log(`  Found: ${service.name} — http://${ip}:${service.port}`);
+    }
+  });
+
+  setTimeout(() => {
+    browser.stop();
+
+    if (services.length === 0) {
+      console.log(`\n  No LAN Sync hosts found on this network.`);
+      console.log(`  Make sure a host is running "lan-sync host" on another computer.\n`);
+      bonjour.destroy();
+      process.exit(0);
+      return;
+    }
+
+    if (services.length === 1) {
+      const s = services[0];
+      const addresses = s.addresses || [];
+      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      const url = `http://${ip}:${s.port}`;
+      console.log(`\n  Connecting to "${s.name}" at ${url}`);
+      openBrowser(url);
+      bonjour.destroy();
+      process.exit(0);
+      return;
+    }
+
+    console.log(`\n  Multiple hosts found — select one:\n`);
+    services.forEach((s, i) => {
+      const addresses = s.addresses || [];
+      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      console.log(`  ${i + 1}. ${s.name} — http://${ip}:${s.port}`);
+    });
+    console.log(`  0. Cancel\n`);
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question('  Select: ', (ans) => {
+      rl.close();
+      const idx = parseInt(ans.trim(), 10);
+      if (isNaN(idx) || idx < 1 || idx > services.length) {
+        console.log('  Cancelled.\n');
+        bonjour.destroy();
+        process.exit(0);
+        return;
+      }
+      const s = services[idx - 1];
+      const addresses = s.addresses || [];
+      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      const url = `http://${ip}:${s.port}`;
+      console.log(`  Connecting to "${s.name}" at ${url}`);
+      openBrowser(url);
+      bonjour.destroy();
+      process.exit(0);
+    });
+  }, SCAN_SECONDS * 1000);
+}
+
+module.exports = { discover };

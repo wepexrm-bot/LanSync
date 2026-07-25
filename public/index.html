@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LAN Sync</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="dot" id="statusDot"></span>
+        <h1>LAN Sync</h1>
+      </div>
+      <button id="newFileBtn" class="btn primary">+ New file</button>
+      <ul id="fileList" class="file-list"></ul>
+      <div class="sidebar-footer">
+        <span id="statusText">connecting…</span>
+      </div>
+    </aside>
+
+    <main class="editor-pane">
+      <div class="editor-header">
+        <span id="currentFileName">No file open</span>
+        <div class="editor-actions" id="editorActions" style="display:none">
+          <button id="renameBtn" class="btn small">Rename</button>
+          <button id="copyBtn" class="btn small">Duplicate</button>
+          <button id="deleteBtn" class="btn small danger">Delete</button>
+        </div>
+      </div>
+      <textarea id="editor" placeholder="Select or create a file to start typing…" spellcheck="false" disabled></textarea>
+    </main>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>
