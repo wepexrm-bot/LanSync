@@ -16,7 +16,7 @@ One computer runs a small server. Every device — laptops, phones, tablets — 
 Lets you run `lan-sync` from any terminal.
 
 ```
-git clone git@github.com:wepexrm-bot/LanSync.git
+git clone https://github.com/wepexrm-bot/LanSync.git
 cd LanSync
 npm install
 npm install -g .
@@ -35,7 +35,7 @@ lan-sync connect      connect mode
 ### Option 2 — Run locally (no global install)
 
 ```
-git clone git@github.com:wepexrm-bot/LanSync.git
+git clone https://github.com/wepexrm-bot/LanSync.git
 cd LanSync
 npm install
 node cli.js host
@@ -46,10 +46,11 @@ node cli.js host
 ### Host mode (Computer A)
 
 ```
-lan-sync host
+lan-sync host [--password <pw>]
 ```
 
 - Starts the server and advertises itself on the network via mDNS (zero-config).
+- Use `--password` to require a password for access (recommended on shared networks).
 - Your browser opens automatically to `http://localhost:3000`.
 - Other devices on the same network can now discover and connect to you.
 
