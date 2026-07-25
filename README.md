@@ -100,6 +100,16 @@ Shows a numbered menu where you can pick host, connect, or uninstall.
 - **Delete** — removes it for everyone.
 - **Drag files from your OS** — drag a `.txt` file into the `files/` folder using your file manager. It shows up on every connected device instantly.
 
+## Update
+
+Pull the latest version from GitHub from anywhere:
+
+```
+lan-sync update
+```
+
+It finds your cloned repo automatically (checks the script location and current directory). Then runs `git pull`, `npm install`, and re-registers the global command.
+
 ## Uninstall
 
 ```
