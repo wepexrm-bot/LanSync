@@ -1,5 +1,7 @@
 # LAN Sync
 
+> **If devices can't connect:** check your firewall — it must allow inbound TCP connections on port 3000 (or the port you're using). On Windows, allow Node.js through the firewall when prompted, or add a rule manually. On Linux, run `sudo ufw allow 3000`.
+
 Real-time synced text files across multiple devices on the same local network — no internet, no cloud account, and no Bluetooth needed. Just your WiFi/Ethernet.
 
 One computer runs a small server. Every device — laptops, phones, tablets — opens the web page and from then on every edit, new file, delete, copy, or rename made on one device appears on all the others within a fraction of a second. The files also live as real `.txt` files on disk, so you can open the `files/` folder directly in a file manager, drag files in or out, or edit with another program — the app picks that up too.
