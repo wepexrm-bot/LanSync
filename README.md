@@ -162,3 +162,7 @@ lan-sync/
     client.js
   files/          — your synced text files live here (created in current directory)
 ```
+
+## License
+
+This project is dedicated to the public domain under the [Unlicense](https://unlicense.org). See `LICENSE` for details.

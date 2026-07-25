@@ -6,6 +6,7 @@
   "bin": {
     "lan-sync": "./cli.js"
   },
+  "license": "Unlicense",
   "scripts": {
     "start": "node cli.js host"
   },
