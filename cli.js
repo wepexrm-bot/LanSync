@@ -43,8 +43,15 @@ if (cmd === 'host') {
   const portIdx = args.indexOf('--port');
   const port = portIdx !== -1 ? parseInt(args[portIdx + 1], 10) : 3000;
   const passIdx = args.indexOf('--password');
-  const password = passIdx !== -1 ? args[passIdx + 1] : null;
-  startServer({ port, password, advertise: true, openBrowser: true });
+  if (passIdx !== -1) {
+    startServer({ port, password: args[passIdx + 1] || null, advertise: true, openBrowser: true });
+  } else {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question('  Password (leave blank for no auth): ', (pw) => {
+      rl.close();
+      startServer({ port, password: pw || null, advertise: true, openBrowser: true });
+    });
+  }
 } else if (cmd === 'connect') {
   discover();
 } else if (cmd === 'update') {
