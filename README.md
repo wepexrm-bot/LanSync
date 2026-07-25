@@ -108,7 +108,14 @@ Pull the latest version from GitHub from anywhere:
 lan-sync update
 ```
 
-It finds your cloned repo automatically (checks the script location and current directory). Then runs `git pull`, `npm install`, and re-registers the global command.
+It finds your cloned repo automatically (checks the script location and current directory), then runs `git pull`, `npm install`, and re-registers the global command.
+
+> **First-time update from an older version:** if `lan-sync update` doesn't exist yet on your machine, update manually once:
+> ```
+> cd LanSync
+> git pull && npm install && npm install -g .
+> ```
+> After that, `lan-sync update` works for all future updates.
 
 ## Uninstall
 
