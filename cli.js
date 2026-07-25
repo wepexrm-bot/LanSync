@@ -13,15 +13,17 @@ const HELP = `
 LAN Sync v${pkg.version}
 
 USAGE
-  lan-sync host [--port <port>]     Start hosting files on the network
-  lan-sync connect                  Discover & connect to a host
-  lan-sync uninstall                Remove LAN Sync from this computer
-  lan-sync --help                   Show this help
-  lan-sync                          Interactive menu
+  lan-sync host [--port <port>] [--password <pw>]
+                               Start hosting files on the network
+  lan-sync connect             Discover & connect to a host
+  lan-sync uninstall           Remove LAN Sync from this computer
+  lan-sync --help              Show this help
+  lan-sync                     Interactive menu
 
 HOST MODE
   Advertises your shared files/ folder on the LAN.
-  Other devices can connect via browser — no IP typing needed.
+  Other devices connect via browser — no IP typing needed.
+  Use --password to require a password for access.
 
 CONNECT MODE
   Scans the LAN for active LAN Sync hosts and lets you pick one.
@@ -49,7 +51,9 @@ if (cmd === '--help' || cmd === '-h') {
 if (cmd === 'host') {
   const portIdx = args.indexOf('--port');
   const port = portIdx !== -1 ? parseInt(args[portIdx + 1], 10) : 3000;
-  startServer({ port, advertise: true, openBrowser: true });
+  const passIdx = args.indexOf('--password');
+  const password = passIdx !== -1 ? args[passIdx + 1] : null;
+  startServer({ port, password, advertise: true, openBrowser: true });
 } else if (cmd === 'connect') {
   discover();
 } else if (cmd === 'uninstall') {
@@ -95,7 +99,12 @@ function interactive() {
   rl.question('  Choose: ', (ans) => {
     rl.close();
     switch (ans.trim()) {
-      case '1': return startServer({ advertise: true, openBrowser: true });
+      case '1': {
+        rl.question('  Password (leave blank for no auth): ', (pw) => {
+          startServer({ password: pw || null, advertise: true, openBrowser: true });
+        });
+        break;
+      }
       case '2': return discover();
       case '3': return uninstall();
       default: process.exit(0);

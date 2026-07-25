@@ -39,7 +39,7 @@ async function listFiles() {
 function broadcast(wss, msg, exclude) {
   const data = JSON.stringify(msg);
   wss.clients.forEach((client) => {
-    if (client !== exclude && client.readyState === 1) {
+    if (client !== exclude && client.readyState === 1 && client.authenticated !== false) {
       client.send(data);
     }
   });
@@ -90,6 +90,7 @@ function openBrowser(url) {
 
 function startServer(opts = {}) {
   const PORT = opts.port || parseInt(process.env.PORT, 10) || 3000;
+  const password = opts.password || null;
   const doAdvertise = opts.advertise !== false;
   const doOpenBrowser = opts.openBrowser === true;
 
@@ -100,15 +101,33 @@ function startServer(opts = {}) {
 
   wss.on('connection', (ws, req) => {
     ws.id = Math.random().toString(36).slice(2, 9);
+    ws.authenticated = !password;
     console.log(`+ device connected (${ws.id}) from ${req.socket.remoteAddress}`);
 
-    listFiles().then((files) => ws.send(JSON.stringify({ type: 'file-list', files })));
+    if (password) {
+      ws.send(JSON.stringify({ type: 'auth-required' }));
+    } else {
+      listFiles().then((files) => ws.send(JSON.stringify({ type: 'file-list', files })));
+    }
 
     ws.on('message', async (raw) => {
       let msg;
       try {
         msg = JSON.parse(raw);
       } catch {
+        return;
+      }
+
+      if (!ws.authenticated) {
+        if (msg.type === 'auth' && msg.password === password) {
+          ws.authenticated = true;
+          ws.send(JSON.stringify({ type: 'auth-ok' }));
+          const files = await listFiles();
+          ws.send(JSON.stringify({ type: 'file-list', files }));
+        } else {
+          ws.send(JSON.stringify({ type: 'auth-error', message: 'Wrong password' }));
+          ws.close();
+        }
         return;
       }
 
@@ -246,6 +265,7 @@ function startServer(opts = {}) {
 
     console.log(`\n  LAN Sync v${require('./package.json').version}`);
     console.log(`  Hosting on port ${PORT}`);
+    if (password) console.log(`  Auth:     Password required`);
     console.log(`  Local:    http://localhost:${PORT}`);
     ips.forEach((ip) => console.log(`  Network:  http://${ip}:${PORT}`));
 

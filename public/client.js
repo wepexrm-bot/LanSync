@@ -10,11 +10,17 @@
   const copyBtn = document.getElementById('copyBtn');
   const deleteBtn = document.getElementById('deleteBtn');
 
+  const authOverlay = document.getElementById('authOverlay');
+  const passwordInput = document.getElementById('passwordInput');
+  const authBtn = document.getElementById('authBtn');
+  const authError = document.getElementById('authError');
+
   let ws;
   let files = [];
   let currentFile = null;
-  let suppressNextInput = false; // true while we're programmatically updating the textarea
+  let suppressNextInput = false;
   let editTimer = null;
+  let currentPassword = null;
 
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -41,10 +47,29 @@
 
   function handleMessage(msg) {
     switch (msg.type) {
+      case 'auth-required': {
+        hideApp();
+        if (currentPassword) {
+          ws.send(JSON.stringify({ type: 'auth', password: currentPassword }));
+        } else {
+          showAuthOverlay();
+        }
+        break;
+      }
+      case 'auth-ok': {
+        hideAuthOverlay();
+        showApp();
+        break;
+      }
+      case 'auth-error': {
+        currentPassword = null;
+        showAuthError(msg.message || 'Wrong password');
+        showAuthOverlay();
+        break;
+      }
       case 'file-list': {
         files = msg.files;
         renderFileList();
-        // if the currently open file got deleted elsewhere, close it
         if (currentFile && !files.some((f) => f.name === currentFile)) {
           closeEditor();
         }
@@ -69,13 +94,51 @@
     }
   }
 
+  function showAuthOverlay() {
+    authOverlay.style.display = 'flex';
+    authError.style.display = 'none';
+    passwordInput.value = '';
+    passwordInput.focus();
+  }
+
+  function hideAuthOverlay() {
+    authOverlay.style.display = 'none';
+  }
+
+  function showAuthError(message) {
+    authError.textContent = message;
+    authError.style.display = 'block';
+  }
+
+  function hideApp() {
+    document.querySelector('.sidebar').style.display = 'none';
+    document.querySelector('.editor-pane').style.display = 'none';
+  }
+
+  function showApp() {
+    document.querySelector('.sidebar').style.display = 'flex';
+    document.querySelector('.editor-pane').style.display = 'flex';
+  }
+
+  function sendAuth() {
+    const password = passwordInput.value;
+    if (!password) return;
+    currentPassword = password;
+    authError.style.display = 'none';
+    ws.send(JSON.stringify({ type: 'auth', password }));
+  }
+
+  authBtn.addEventListener('click', sendAuth);
+  passwordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendAuth();
+  });
+
   function applyRemoteContent(content) {
     if (editor.value === content) return;
     const { selectionStart, selectionEnd } = editor;
     const lenDiff = content.length - editor.value.length;
     suppressNextInput = true;
     editor.value = content;
-    // best-effort cursor preservation for the common "someone typed near the end" case
     const newPos = Math.max(0, selectionStart + lenDiff);
     try {
       editor.setSelectionRange(newPos, Math.max(newPos, selectionEnd + lenDiff));
@@ -118,7 +181,7 @@
     if (editTimer) clearTimeout(editTimer);
     editTimer = setTimeout(() => {
       ws.send(JSON.stringify({ type: 'edit', name: currentFile, content: editor.value }));
-    }, 120); // small debounce so every keystroke doesn't flood the socket
+    }, 120);
   });
 
   newFileBtn.addEventListener('click', () => {

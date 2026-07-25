@@ -33,6 +33,19 @@
     </main>
   </div>
 
+  <div id="authOverlay" class="auth-overlay" style="display:none">
+    <div class="auth-box">
+      <div class="auth-header">
+        <span class="dot"></span>
+        <h2>LAN Sync</h2>
+      </div>
+      <p class="auth-subtitle">This session requires a password</p>
+      <input type="password" id="passwordInput" class="auth-input" placeholder="Enter password" autofocus />
+      <button id="authBtn" class="btn primary auth-btn">Connect</button>
+      <p id="authError" class="auth-error" style="display:none"></p>
+    </div>
+  </div>
+
   <script src="client.js"></script>
 </body>
 </html>
