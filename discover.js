@@ -34,10 +34,23 @@ function discover() {
     browser.stop();
 
     if (services.length === 0) {
-      console.log(`\n  No LAN Sync hosts found on this network.`);
-      console.log(`  Make sure a host is running "lan-sync host" on another computer.\n`);
-      bonjour.destroy();
-      process.exit(0);
+      console.log(`\n  No LAN Sync hosts found via mDNS.`);
+      console.log(`  Enter the host's IP address manually, or press Enter to exit.\n`);
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+      rl.question('  Host IP (e.g. 192.168.1.42): ', (ip) => {
+        rl.close();
+        if (!ip.trim()) {
+          console.log('  Cancelled.\n');
+          bonjour.destroy();
+          process.exit(0);
+          return;
+        }
+        const url = `http://${ip.trim()}:3000`;
+        console.log(`\n  Connecting to ${url}`);
+        openBrowser(url);
+        bonjour.destroy();
+        process.exit(0);
+      });
       return;
     }
 
