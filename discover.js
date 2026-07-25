@@ -2,9 +2,16 @@ const readline = require('readline');
 const bonjour = require('bonjour')();
 
 function openBrowser(url) {
-  const cmd = process.platform === 'win32' ? 'start' :
-              process.platform === 'darwin' ? 'open' : 'xdg-open';
-  require('child_process').exec(`${cmd} ${url}`);
+  const { execSync } = require('child_process');
+  try {
+    if (process.platform === 'win32') {
+      execSync(`start "" "${url}"`, { stdio: 'ignore', timeout: 5000 });
+    } else if (process.platform === 'darwin') {
+      execSync(`open "${url}"`, { stdio: 'ignore', timeout: 5000 });
+    } else {
+      execSync(`xdg-open "${url}"`, { stdio: 'ignore', timeout: 5000 });
+    }
+  } catch {}
 }
 
 function discover() {
