@@ -98,6 +98,7 @@ function update() {
   console.log(`\n  Updating LAN Sync in ${gitRoot}...\n`);
 
   try {
+    execSync('git stash', { cwd: gitRoot, stdio: 'pipe' });
     execSync('git pull', { cwd: gitRoot, stdio: 'inherit' });
     console.log('');
     execSync('npm install', { cwd: gitRoot, stdio: 'inherit' });
