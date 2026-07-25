@@ -72,9 +72,18 @@ if (cmd === 'host') {
 }
 
 function findGitRoot() {
-  const candidates = [__dirname, process.cwd()];
-  for (const start of candidates) {
-    let dir = start;
+  const seen = new Set();
+  const raw = [
+    __dirname,
+    process.cwd(),
+    path.dirname(require.main.filename),
+    fs.realpathSync(__dirname),
+  ];
+  for (const start of raw) {
+    const normalized = path.resolve(start);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    let dir = normalized;
     for (let i = 0; i < 10; i++) {
       if (fs.existsSync(path.join(dir, '.git'))) return dir;
       const parent = path.dirname(dir);
