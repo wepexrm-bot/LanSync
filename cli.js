@@ -2,6 +2,7 @@
 
 const readline = require('readline');
 const path = require('path');
+const fs = require('fs');
 const os = require('os');
 const { execSync } = require('child_process');
 
@@ -16,6 +17,7 @@ USAGE
   lan-sync host [--port <port>] [--password <pw>]
                                Start hosting files on the network
   lan-sync connect             Discover & connect to a host
+  lan-sync update              Pull the latest version from GitHub
   lan-sync uninstall           Remove LAN Sync from this computer
   lan-sync --help              Show this help
   lan-sync                     Interactive menu
@@ -28,17 +30,6 @@ HOST MODE
 CONNECT MODE
   Scans the LAN for active LAN Sync hosts and lets you pick one.
 `;
-
-function isGloballyInstalled() {
-  try {
-    const prefix = execSync('npm prefix -g', { encoding: 'utf8' }).trim();
-    const globalModules = path.join(prefix, 'node_modules', 'lan-sync');
-    const fs = require('fs');
-    return fs.existsSync(globalModules);
-  } catch {
-    return false;
-  }
-}
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -56,6 +47,8 @@ if (cmd === 'host') {
   startServer({ port, password, advertise: true, openBrowser: true });
 } else if (cmd === 'connect') {
   discover();
+} else if (cmd === 'update') {
+  update();
 } else if (cmd === 'uninstall') {
   uninstall();
 } else if (cmd) {
@@ -64,6 +57,50 @@ if (cmd === 'host') {
   process.exit(1);
 } else {
   interactive();
+}
+
+function findGitRoot() {
+  const candidates = [__dirname, process.cwd()];
+  for (const start of candidates) {
+    let dir = start;
+    for (let i = 0; i < 10; i++) {
+      if (fs.existsSync(path.join(dir, '.git'))) return dir;
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return null;
+}
+
+function update() {
+  const gitRoot = findGitRoot();
+  if (!gitRoot) {
+    console.log(`\n  Could not find the LanSync source folder.`);
+    console.log(`  Navigate to your cloned LanSync directory and run:`);
+    console.log(`    git pull && npm install && npm install -g .\n`);
+    process.exit(0);
+    return;
+  }
+
+  console.log(`\n  Updating LAN Sync in ${gitRoot}...\n`);
+
+  try {
+    execSync('git pull', { cwd: gitRoot, stdio: 'inherit' });
+    console.log('');
+    execSync('npm install', { cwd: gitRoot, stdio: 'inherit' });
+    console.log('');
+
+    try {
+      execSync('npm install -g .', { cwd: gitRoot, stdio: 'inherit' });
+      console.log(`\n  LAN Sync updated successfully.\n`);
+    } catch {
+      console.log(`\n  Source updated. Run "npm install -g ." to update the global command.\n`);
+    }
+  } catch (err) {
+    console.error(`\n  Update failed: ${err.message}\n`);
+  }
+  process.exit(0);
 }
 
 function uninstall() {
@@ -94,7 +131,8 @@ function interactive() {
   console.log(`  Real-time text sync over your local network\n`);
   console.log(`  ${'1'.padEnd(4)} Host mode — Share your files on the network`);
   console.log(`  ${'2'.padEnd(4)} Connect mode — Discover & connect to a host`);
-  console.log(`  ${'3'.padEnd(4)} Uninstall — Remove LAN Sync from this computer`);
+  console.log(`  ${'3'.padEnd(4)} Update — Pull the latest version from GitHub`);
+  console.log(`  ${'4'.padEnd(4)} Uninstall — Remove LAN Sync from this computer`);
   console.log(`  ${'0'.padEnd(4)} Exit\n`);
   rl.question('  Choose: ', (ans) => {
     rl.close();
@@ -106,7 +144,8 @@ function interactive() {
         break;
       }
       case '2': return discover();
-      case '3': return uninstall();
+      case '3': return update();
+      case '4': return uninstall();
       default: process.exit(0);
     }
   });
