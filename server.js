@@ -8,7 +8,7 @@ const chokidar = require('chokidar');
 const os = require('os');
 const bonjour = require('bonjour')();
 
-const FILES_DIR = path.join(__dirname, 'files');
+const FILES_DIR = path.join(process.cwd(), 'files');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
