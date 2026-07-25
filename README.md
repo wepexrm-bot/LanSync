@@ -55,7 +55,7 @@ lan-sync host [--password <pw>]
 - Other devices on the same network can now discover and connect to you.
 
 ```
-  LAN Sync v2.0.0
+  LAN Sync v2.1.0
   Hosting on port 3000
   Local:    http://localhost:3000
   Network:  http://192.168.1.42:3000
