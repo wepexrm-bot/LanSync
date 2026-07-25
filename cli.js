@@ -142,18 +142,18 @@ function interactive() {
   console.log(`  ${'4'.padEnd(4)} Uninstall — Remove LAN Sync from this computer`);
   console.log(`  ${'0'.padEnd(4)} Exit\n`);
   rl.question('  Choose: ', (ans) => {
-    rl.close();
     switch (ans.trim()) {
       case '1': {
         rl.question('  Password (leave blank for no auth): ', (pw) => {
+          rl.close();
           startServer({ password: pw || null, advertise: true, openBrowser: true });
         });
         break;
       }
-      case '2': return discover();
-      case '3': return update();
-      case '4': return uninstall();
-      default: process.exit(0);
+      case '2': rl.close(); return discover();
+      case '3': rl.close(); return update();
+      case '4': rl.close(); return uninstall();
+      default: rl.close(); process.exit(0);
     }
   });
 }
