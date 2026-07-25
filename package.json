@@ -1,6 +1,6 @@
 {
   "name": "lan-sync",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "Real-time synced text files over your local network (no internet, no Bluetooth needed)",
   "main": "cli.js",
   "bin": {
