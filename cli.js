@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const { execSync } = require('child_process');
 
+
 const pkg = require('./package.json');
 const { startServer } = require('./server');
 const { discover } = require('./discover');
@@ -133,6 +134,10 @@ function update() {
 
     try {
       execSync('npm install -g .', { cwd: gitRoot, stdio: 'inherit' });
+      try {
+        const binPath = execSync('which lan-sync', { encoding: 'utf8' }).trim();
+        if (binPath) fs.chmodSync(binPath, 0o755);
+      } catch {}
       console.log(`\n  LAN Sync updated successfully.\n`);
     } catch {
       console.log(`\n  Source updated. Run "npm install -g ." to update the global command.\n`);

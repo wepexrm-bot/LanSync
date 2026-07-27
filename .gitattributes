@@ -1,0 +1,4 @@
+* text=auto eol=lf
+cli.js text eol=lf
+server.js text eol=lf
+discover.js text eol=lf
