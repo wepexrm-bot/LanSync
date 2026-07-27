@@ -37,7 +37,7 @@ function discover() {
       console.log(`\n  No LAN Sync hosts found via mDNS.`);
       console.log(`  Enter the host's IP address manually, or press Enter to exit.\n`);
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-      rl.question('  Host IP (e.g. 192.168.1.42): ', (ip) => {
+      rl.question('  Host IP (e.g. 192.168.1.42 or 192.168.1.42:8080): ', (ip) => {
         rl.close();
         if (!ip.trim()) {
           console.log('  Cancelled.\n');
@@ -45,7 +45,10 @@ function discover() {
           process.exit(0);
           return;
         }
-        const url = `http://${ip.trim()}:3000`;
+        const parts = ip.trim().split(':');
+        const host = parts[0];
+        const port = parts[1] || '3000';
+        const url = `http://${host}:${port}`;
         console.log(`\n  Connecting to ${url}`);
         openBrowser(url);
         bonjour.destroy();
