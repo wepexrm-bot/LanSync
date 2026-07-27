@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
@@ -103,7 +104,26 @@ function startServer(opts = {}) {
 
   const app = express();
   app.use(express.static(PUBLIC_DIR));
-  const server = http.createServer(app);
+
+  let protocol = 'http';
+  let server;
+
+  if (opts.cert && opts.key) {
+    const tlsOpts = {
+      cert: fs.readFileSync(opts.cert),
+      key: fs.readFileSync(opts.key),
+    };
+    server = https.createServer(tlsOpts, app);
+    protocol = 'https';
+    if (password) console.log('  TLS:      Enabled (WSS)');
+  } else {
+    server = http.createServer(app);
+    if (password) {
+      console.log('  Warning:  Password is sent in plaintext over ws://');
+      console.log('            Use --cert and --key to enable HTTPS/WSS');
+    }
+  }
+
   const wss = new WebSocketServer({ server });
 
   wss.on('connection', (ws, req) => {
@@ -271,10 +291,10 @@ function startServer(opts = {}) {
     const ips = localIPs();
 
     console.log(`\n  LAN Sync v${require('./package.json').version}`);
-    console.log(`  Hosting on port ${PORT}`);
+    console.log(`  Hosting on port ${PORT} (${protocol})`);
     if (password) console.log(`  Auth:     Password required`);
-    console.log(`  Local:    http://localhost:${PORT}`);
-    ips.forEach((ip) => console.log(`  Network:  http://${ip}:${PORT}`));
+    console.log(`  Local:    ${protocol}://localhost:${PORT}`);
+    ips.forEach((ip) => console.log(`  Network:  ${protocol}://${ip}:${PORT}`));
 
     if (doAdvertise) {
       const serviceName = `LAN Sync — ${hostname}`;
@@ -290,7 +310,7 @@ function startServer(opts = {}) {
     }
 
     if (doOpenBrowser) {
-      openBrowser(`http://localhost:${PORT}`);
+      openBrowser(`${protocol}://localhost:${PORT}`);
     }
 
     console.log(`\n  Connected devices: 0`);

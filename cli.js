@@ -15,6 +15,7 @@ LAN Sync v${pkg.version}
 
 USAGE
   lan-sync host [--port <port>] [--password <pw>]
+               [--cert <file> --key <file>]
                                Start hosting files on the network
   lan-sync connect             Discover & connect to a host
   lan-sync update              Pull the latest version from GitHub
@@ -26,6 +27,7 @@ HOST MODE
   Advertises your shared files/ folder on the LAN.
   Other devices connect via browser — no IP typing needed.
   Use --password to require a password for access.
+  Use --cert and --key to enable HTTPS/WSS (TLS encryption).
 
 CONNECT MODE
   Scans the LAN for active LAN Sync hosts and lets you pick one.
@@ -47,14 +49,21 @@ if (cmd === '--version' || cmd === '-v') {
 if (cmd === 'host') {
   const portIdx = args.indexOf('--port');
   const port = portIdx !== -1 ? parseInt(args[portIdx + 1], 10) : 3000;
+  const certIdx = args.indexOf('--cert');
+  const keyIdx = args.indexOf('--key');
+  const cert = certIdx !== -1 ? args[certIdx + 1] : null;
+  const key = keyIdx !== -1 ? args[keyIdx + 1] : null;
   const passIdx = args.indexOf('--password');
+  const hostOpts = { port, cert, key, advertise: true, openBrowser: true };
   if (passIdx !== -1) {
-    startServer({ port, password: args[passIdx + 1] || null, advertise: true, openBrowser: true });
+    hostOpts.password = args[passIdx + 1] || null;
+    startServer(hostOpts);
   } else {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     rl.question('  Password (leave blank for no auth): ', (pw) => {
       rl.close();
-      startServer({ port, password: pw || null, advertise: true, openBrowser: true });
+      hostOpts.password = pw || null;
+      startServer(hostOpts);
     });
   }
 } else if (cmd === 'connect') {
@@ -107,8 +116,17 @@ function update() {
   console.log(`\n  Updating LAN Sync in ${gitRoot}...\n`);
 
   try {
+    const dirty = execSync('git status --porcelain', { cwd: gitRoot, encoding: 'utf8' }).trim();
+    if (dirty) {
+      console.log('  Local changes detected — stashing them before update.\n');
+      execSync('git stash', { cwd: gitRoot, stdio: 'inherit' });
+    }
     execSync('git fetch origin', { cwd: gitRoot, stdio: 'inherit' });
     execSync('git reset --hard origin/master', { cwd: gitRoot, stdio: 'inherit' });
+    if (dirty) {
+      console.log('  Restoring local changes...');
+      execSync('git stash pop', { cwd: gitRoot, stdio: 'pipe' });
+    }
     console.log('');
     execSync('npm install', { cwd: gitRoot, stdio: 'inherit' });
     console.log('');
