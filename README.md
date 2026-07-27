@@ -112,8 +112,6 @@ lan-sync update
 
 It finds your cloned repo automatically (checks the script location and current directory), then runs `git pull`, `npm install`, and re-registers the global command.
 
-> **Note:** `lan-sync update` runs `git reset --hard origin/master` which discards any local changes in the cloned repo. Make sure you don't have uncommitted work there before running it.
-
 > **First-time update from an older version:** if `lan-sync update` doesn't exist yet on your machine, update manually once:
 > ```
 > cd LanSync
@@ -144,12 +142,6 @@ Or with an environment variable:
 ```
 PORT=8080 lan-sync host
 ```
-
-## Security notes
-
-- **Password is sent in plaintext** over WebSocket (`ws://`) with no TLS encryption. Anyone on the same network with a packet sniffer (Wireshark) can read it. The password is meant for **casual access control** on shared WiFi, not for security against a determined attacker.
-- **No authentication** when running without `--password` — anyone on the LAN can access all files.
-- **Only use on trusted networks** — home WiFi or a dedicated LAN. Avoid public/cafe WiFi unless you have a firewall isolating your devices.
 
 ## How it works
 
