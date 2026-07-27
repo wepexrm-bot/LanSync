@@ -1,6 +1,20 @@
 const readline = require('readline');
 const bonjour = require('bonjour')();
 
+function pickBestIP(addresses) {
+  if (!addresses || addresses.length === 0) return null;
+  const rfc1918 = addresses.filter((a) => {
+    const parts = a.split('.').map(Number);
+    if (parts.length !== 4) return false;
+    if (parts[0] === 10) return true;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+    if (parts[0] === 192 && parts[1] === 168) return true;
+    return false;
+  });
+  if (rfc1918.length > 0) return rfc1918[0];
+  return addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0];
+}
+
 function openBrowser(url) {
   const { execSync } = require('child_process');
   try {
@@ -24,8 +38,7 @@ function discover() {
     const existing = services.find((s) => s.name === service.name && s.host === service.host);
     if (!existing) {
       services.push(service);
-      const addresses = service.addresses || [];
-      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || service.host;
+      const ip = pickBestIP(service.addresses) || service.host;
       console.log(`  Found: ${service.name} — http://${ip}:${service.port}`);
     }
   });
@@ -59,8 +72,7 @@ function discover() {
 
     if (services.length === 1) {
       const s = services[0];
-      const addresses = s.addresses || [];
-      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      const ip = pickBestIP(s.addresses) || s.host;
       const url = `http://${ip}:${s.port}`;
       console.log(`\n  Connecting to "${s.name}" at ${url}`);
       openBrowser(url);
@@ -71,8 +83,7 @@ function discover() {
 
     console.log(`\n  Multiple hosts found — select one:\n`);
     services.forEach((s, i) => {
-      const addresses = s.addresses || [];
-      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      const ip = pickBestIP(s.addresses) || s.host;
       console.log(`  ${i + 1}. ${s.name} — http://${ip}:${s.port}`);
     });
     console.log(`  0. Cancel\n`);
@@ -88,8 +99,7 @@ function discover() {
         return;
       }
       const s = services[idx - 1];
-      const addresses = s.addresses || [];
-      const ip = addresses.find((a) => a !== '127.0.0.1' && a !== '::1') || addresses[0] || s.host;
+      const ip = pickBestIP(s.addresses) || s.host;
       const url = `http://${ip}:${s.port}`;
       console.log(`  Connecting to "${s.name}" at ${url}`);
       openBrowser(url);
